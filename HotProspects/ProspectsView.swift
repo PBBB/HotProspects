@@ -13,6 +13,8 @@ import UserNotifications
 struct ProspectsView: View {
     @EnvironmentObject var prospects: Prospects
     @State private var isShowingScanner = false
+    @State private var sorting: Sorting = .recent
+    @State private var isShowingSortingAction = false
 
     let filter: FilterType
     var title: String {
@@ -37,10 +39,19 @@ struct ProspectsView: View {
         }
     }
     
+    var sortedProspects: [Prospect] {
+        switch sorting {
+        case .recent:
+            return filteredProspects.reversed()
+        case .name:
+            return filteredProspects.sorted(by: { $0.name < $1.name })
+        }
+    }
+    
     var body: some View {
         NavigationView {
             List{
-                ForEach(filteredProspects) { prospect in
+                ForEach(sortedProspects) { prospect in
                     HStack {
                         if self.filter == .none {
                             if prospect.isContacted {
@@ -68,15 +79,29 @@ struct ProspectsView: View {
                     }
                 }
             }
-                .navigationBarTitle(title)
-                .navigationBarItems(trailing: Button(action: {
+            .navigationBarTitle(title)
+            .navigationBarItems(
+                leading: Button(action: {
+                    self.isShowingSortingAction = true
+                }) {
+                    Image(systemName: "arrow.up.arrow.down.square")
+                    Text("Sort")
+                },
+                trailing: Button(action: {
                     self.isShowingScanner = true
                 }) {
                     Image(systemName: "qrcode.viewfinder")
                     Text("Scan")
-                })
+            })
                 .sheet(isPresented: $isShowingScanner) {
                     CodeScannerView(codeTypes: [.qr], simulatedData: "Paul Hudson\npaul@hackingwithswift.com", completion: self.handleScan(result:))
+            }
+            .actionSheet(isPresented: $isShowingSortingAction) {
+                ActionSheet(title: Text("Sort by"), message: nil, buttons: [
+                    .default(Text("Name"), action: { self.sorting = .name }),
+                    .default(Text("Recent"), action: { self.sorting = .recent }),
+                    .cancel()
+                ])
             }
         }
     }
@@ -143,5 +168,9 @@ struct ProspectsView_Previews: PreviewProvider {
 extension ProspectsView {
     enum FilterType {
         case none, contacted, uncontacted
+    }
+    
+    enum Sorting {
+        case name, recent
     }
 }
