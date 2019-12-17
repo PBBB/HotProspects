@@ -41,19 +41,28 @@ struct ProspectsView: View {
         NavigationView {
             List{
                 ForEach(filteredProspects) { prospect in
-                    VStack (alignment: .leading) {
-                        Text(prospect.name)
-                            .font(.headline)
-                        Text(prospect.emailAddress)
-                            .foregroundColor(.secondary)
-                    }
-                    .contextMenu {
-                        Button(prospect.isContacted ? "Mark Uncontacted" : "Mark Contacted") {
-                            self.prospects.toggle(prospect)
+                    HStack {
+                        if self.filter == .none {
+                            if prospect.isContacted {
+                                Image(systemName: "checkmark.circle")
+                            } else {
+                                Image(systemName: "questionmark.diamond")
+                            }
                         }
-                        if !prospect.isContacted {
-                            Button("Remind Me") {
-                                self.addNotification(for: prospect)
+                        VStack (alignment: .leading) {
+                            Text(prospect.name)
+                                .font(.headline)
+                            Text(prospect.emailAddress)
+                                .foregroundColor(.secondary)
+                        }
+                        .contextMenu {
+                            Button(prospect.isContacted ? "Mark Uncontacted" : "Mark Contacted") {
+                                self.prospects.toggle(prospect)
+                            }
+                            if !prospect.isContacted {
+                                Button("Remind Me") {
+                                    self.addNotification(for: prospect)
+                                }
                             }
                         }
                     }
